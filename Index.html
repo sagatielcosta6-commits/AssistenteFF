@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistente FF – Módulo de Otimização V4.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* ========================================================= */
+        /* VARIÁVEIS DE COR E ESTILO - TEMA CYBERPUNK (ROXO/CIANO)   */
+        /* ========================================================= */
+        :root {
+            --neon-primary: #a100ff; /* Roxo Profundo */
+            --neon-secondary: #00eaff; /* Ciano Vibrante */
+            --bg-dark: #07061d; /* Fundo Ultra Escuro */
+            --bg-card: rgba(10, 5, 20, 0.9); /* Fundo do Card */
+            --bg-inactive: #1f1e33;
+            --shadow-primary: 0 0 25px rgba(161, 0, 255, 0.6);
+            --shadow-secondary: 0 0 25px rgba(0, 234, 255, 0.6);
+            --border-glow: 1px solid var(--neon-primary);
+        }
+
+        /* ========================================================= */
+        /* ESTILOS GERAIS E FUNDO */
+        /* ========================================================= */
+        .futuristic-theme { 
+            background-color: var(--bg-dark); 
+            color: #e0f7fa; 
+            font-family: 'Inter', sans-serif; 
+            position: relative; 
+            min-height: 100vh;
+        }
+
+        /* Fundo de Vídeo e Efeito de Matriz */
+        #video-background { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; 
+            z-index: 0; opacity: 0.3; pointer-events: none; filter: brightness(0.7) blur(2px); 
+        }
+        #video-background iframe { 
+            width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.77vh; 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+        }
+
+        /* Efeito de Scanline/Matrix (simulação de código no fundo) */
+        .matrix-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 1;
+            background-image: repeating-linear-gradient(
+                to bottom,
+                rgba(0, 0, 0, 0.05), 
+                rgba(0, 0, 0, 0.5) 1px,
+                transparent 1px,
+                transparent 2px
+            ),
+            linear-gradient(
+                to bottom, 
+                rgba(7, 6, 29, 0.3), 
+                rgba(7, 6, 29, 1)
+            );
+            pointer-events: none;
+        }
+
+        /* ========================================================= */
+        /* ESTILOS DO NOVO PAINEL CENTRAL (Assistente FF) */
+        /* ========================================================= */
+        .main-panel-container {
+            position: relative;
+            z-index: 10;
+            padding-top: 5rem;
+            padding-bottom: 5rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .hud-frame {
+            width: 100%;
+            max-width: 900px;
+            padding: 2rem;
+            background-color: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(161, 0, 255, 0.4);
+            border-radius: 20px;
+            box-shadow: var(--shadow-primary);
+            position: relative;
+            animation: boot-up 0.8s ease-out forwards;
+        }
+
+        /* Animação de entrada do painel */
+        @keyframes boot-up {
+            from { opacity: 0; transform: translateY(50px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Efeito de Borda Neon Animada */
+        .hud-frame::before {
+            content: '';
+            position: absolute;
+            top: -5px; bottom: -5px; left: -5px; right: -5px;
+            border-radius: 25px;
+            background: linear-gradient(45deg, var(--neon-primary), var(--neon-secondary), var(--neon-primary));
+            background-size: 400% 400%;
+            z-index: -1;
+            opacity: 0.8;
+            filter: blur(15px);
+            transition: all 0.5s ease-in-out;
+            animation: border-glow-animate 5s infinite alternate;
+        }
+
+        @keyframes border-glow-animate {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .neon-title {
+            text-shadow: 0 0 15px var(--neon-primary), 0 0 35px var(--neon-secondary);
+        }
+
+        /* Estilo para as caixas de função e diagnóstico */
+        .module-box {
+            padding: 1.5rem;
+            background-color: rgba(30, 30, 50, 0.7);
+            border-radius: 12px;
+            border-left: 5px solid var(--neon-primary);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Estilos dos Toggles Modernos */
+        .modern-switch {
+            width: 60px; height: 30px; 
+            background-color: var(--bg-inactive); 
+            border-radius: 9999px; position: relative; cursor: pointer; 
+            transition: background-color 0.3s, box-shadow 0.3s; 
+            border: 2px solid var(--neon-primary)/20;
+        }
+        .modern-switch:before {
+            content: ''; position: absolute; top: 3px; left: 3px; 
+            width: 20px; height: 20px; background-color: #e0f7fa; 
+            border-radius: 50%; transition: transform 0.3s, background-color 0.3s; 
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+        .modern-switch.active {
+            background-color: var(--neon-secondary); 
+            box-shadow: 0 0 15px var(--neon-secondary); 
+        }
+        .modern-switch.active:before {
+            transform: translateX(30px); 
+            background-color: var(--neon-primary); 
+            box-shadow: 0 0 10px var(--neon-primary);
+        }
+
+        /* Estilos para a parte de Conexão/Ping */
+        .ping-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--neon-secondary);
+            text-shadow: 0 0 10px var(--neon-secondary);
+        }
+
+        .status-secure {
+            color: #00ff99;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 255, 153, 0.6);
+            font-family: monospace;
+        }
+        
+        /* Estilos do Slider DPI */
+        #dpi-slider { 
+            -webkit-appearance: none; appearance: none; width: 100%; height: 10px; 
+            border-radius: 5px; outline: none; transition: opacity .2s; 
+            background: var(--bg-inactive); 
+        }
+        #dpi-slider::-webkit-slider-thumb { 
+            -webkit-appearance: none; appearance: none; width: 25px; height: 25px; 
+            border-radius: 50%; background: var(--neon-secondary); cursor: pointer; 
+            box-shadow: 0 0 10px var(--neon-secondary); border: 3px solid var(--bg-dark); 
+        }
+
+        /* Estilo do Botão Principal ATIVAR */
+        .activate-button {
+            background: linear-gradient(90deg, #ff00ff 0%, var(--neon-primary) 100%);
+            color: white;
+            padding: 1rem 3rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 15px;
+            border: 3px solid var(--neon-secondary);
+            box-shadow: 0 0 20px #ff00ff, 0 0 40px var(--neon-primary);
+            transition: all 0.3s;
+            text-shadow: 0 0 5px black;
+        }
+        .activate-button:hover {
+            background: linear-gradient(90deg, var(--neon-secondary) 0%, #00eaff 100%);
+            color: var(--bg-dark);
+            border-color: var(--neon-primary);
+            box-shadow: 0 0 30px var(--neon-secondary), 0 0 60px var(--neon-secondary);
+            transform: scale(1.02);
+        }
+
+        /* Estilo da área de Key (roda-pé) */
+        .key-info-footer {
+            background-color: rgba(30, 30, 50, 0.7);
+            padding: 0.75rem;
+            border-radius: 10px;
+            font-family: monospace;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .key-text {
+            color: var(--neon-secondary);
+            font-size: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .copy-key-icon {
+            color: white;
+            background: var(--neon-primary);
+            padding: 0.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+        }
+        .copy-key-icon:hover {
+            background: var(--neon-secondary);
+            color: var(--bg-dark);
+            box-shadow: 0 0 10px var(--neon-secondary);
+        }
+
+        /* ========================================================= */
+        /* ESTILOS DE LOGIN (MANTIDOS E ADAPTADOS) */
+        /* ========================================================= */
+        .login-screen-container { 
+            height: 100vh; display: flex; justify-content: center; align-items: center; text-align: center; 
+        }
+        @keyframes login-fade-in {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .login-box {
+            width: 90%; max-width: 450px; padding: 3rem; 
+            border: 2px solid rgba(0, 234, 255, 0.6); 
+            background: rgba(10, 5, 20, 0.85); 
+            backdrop-filter: blur(25px) saturate(180%); 
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4), 0 0 60px rgba(161, 0, 255, 0.4); 
+            border-radius: 20px; 
+            animation: login-fade-in 0.8s ease-out forwards; 
+            position: relative;
+        }
+        .login-box::before {
+            content: '[STATUS: READY]';
+            position: absolute; top: 10px; left: 15px; font-family: monospace; font-size: 0.75rem; color: #38bdf8; opacity: 0.7;
+        }
+        #key-input {
+            width: 100%; padding: 1.2rem; background-color: rgba(0, 0, 0, 0.3); 
+            border: 2px solid var(--neon-primary); border-bottom: 4px solid var(--neon-secondary); 
+            color: var(--neon-secondary); font-size: 1.4rem; text-align: center; border-radius: 8px; 
+            margin-bottom: 2rem; box-shadow: 0 0 10px rgba(161, 0, 255, 0.2); outline: none;
+            letter-spacing: 3px; transition: all 0.3s; font-family: monospace; text-transform: uppercase;
+        }
+        #key-input:focus { 
+            border-color: var(--neon-secondary); background-color: rgba(0, 234, 255, 0.1); 
+            box-shadow: 0 0 30px var(--neon-secondary), 0 0 10px var(--neon-primary); 
+        }
+        .key-submit-button {
+            font-weight: bold; padding: 1rem 1.5rem; border-radius: 8px; transition: all 0.3s; border: none;
+            width: 100%; text-transform: uppercase; letter-spacing: 1px;
+            background: var(--neon-secondary); color: var(--bg-dark); box-shadow: 0 0 15px var(--neon-secondary);
+            font-size: 1.5rem;
+        }
+        .key-submit-button:hover:not(:disabled) { 
+            box-shadow: 0 0 40px var(--neon-secondary), 0 0 10px var(--neon-primary); 
+            transform: scale(1.01); 
+        }
+        .key-submit-button:disabled {
+            background: #3f3b55; cursor: not-allowed; box-shadow: none; color: #a0a0a0;
+        }
+        .error-message { 
+            color: #ff3366; text-shadow: 0 0 8px rgba(255, 51, 102, 1); margin-top: 1.5rem; 
+            font-size: 1rem; font-weight: 600; border-top: 1px dashed #ff3366; padding-top: 1rem;
+            font-family: monospace;
+        }
+
+        .modal-key-dialog {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.9); z-index: 100;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .modal-key-content {
+            background: var(--bg-card); backdrop-filter: blur(15px);
+            padding: 3rem; border-radius: 16px;
+            border: 3px solid var(--neon-secondary); box-shadow: 0 0 70px var(--neon-secondary)/50;
+            width: 90%; max-width: 550px; text-align: center;
+        }
+        .key-display-container {
+            display: flex; align-items: center; justify-content: space-between;
+            background-color: var(--bg-inactive); border: 1px solid var(--neon-secondary);
+            border-radius: 8px; margin: 1.5rem 0; padding: 0.75rem; 
+        }
+        .key-display {
+            color: var(--neon-secondary); font-size: 1.5rem; padding: 0.5rem; 
+            font-family: monospace; letter-spacing: 3px; word-break: break-all;
+            flex-grow: 1; text-align: left; padding-left: 1rem;
+        }
+        .copy-button {
+            background: var(--neon-primary); color: white; padding: 0.75rem 1rem; 
+            border-radius: 6px; margin-left: 15px; transition: background 0.2s, transform 0.2s;
+            text-transform: uppercase; font-weight: 700;
+        }
+        .copy-button:hover {
+            background: var(--neon-secondary); color: var(--bg-dark); transform: scale(1.05);
+        }
+        .key-generate-button {
+            background: transparent; color: var(--neon-primary); border: 2px solid var(--neon-primary); 
+            font-size: 1rem; padding: 0.8rem 1.5rem; border-radius: 8px; transition: all 0.3s;
+        }
+        .key-generate-button:hover { 
+            box-shadow: 0 0 20px var(--neon-primary); background: rgba(161, 0, 255, 0.2); 
+        }
+        
+        #main-hud-panel { display: none; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'neon-primary': 'var(--neon-primary)',
+                        'neon-secondary': 'var(--neon-secondary)',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="futuristic-theme" id="main-body">
+    
+    <div id="video-background">
+        <iframe 
+            src="https://www.youtube.com/embed/1eX7l3V9xRw?autoplay=1&mute=1&loop=1&playlist=1eX7l3V9xRw&controls=0&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&start=20"
+            frameborder="0"
+            allow="autoplay; encrypted-media; loop"
+            allowfullscreen>
+        </iframe>
+    </div>
+    <div class="matrix-overlay"></div>
+
+    <div id="login-screen" class="login-screen-container">
+        <div class="login-box">
+            <h1 class="text-4xl md:text-5xl font-black tracking-tighter uppercase neon-glow text-neon-primary mb-2">
+                ASSISTENTE <span class="text-neon-secondary">FF</span>
+            </h1>
+            <h2 class="text-xl text-gray-300 mb-8 font-light border-b-2 border-neon-secondary/30 pb-3">
+                <span class="text-neon-secondary font-bold">MÓDULO DE AUTENTICAÇÃO HFR-42</span>
+            </h2>
+
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <label for="key-input" class="block text-left text-sm font-semibold text-gray-200 mb-2">
+                    🔑 CHAVE DE ACESSO EXCLUSIVA:
+                </label>
+                <input type="text" id="key-input" placeholder="XXXXXX-YYYYYY-ZZZZZZ" required maxlength="20">
+                
+                <button type="submit" class="key-submit-button text-2xl">
+                    <span id="login-text">CONECTAR AO SISTEMA</span>
+                </button>
+            </form>
+            
+            <p id="login-error-message" class="error-message"></p>
+        </div>
+    </div>
+    <div id="key-modal" class="modal-key-dialog hidden">
+        <div class="modal-key-content">
+            <h3 class="text-3xl font-bold text-neon-primary mb-4">🔑 STATUS DA CHAVE DE ACESSO</h3>
+            
+            <p class="text-gray-300 mb-4" id="key-modal-info">Verificando expiração...</p>
+            
+            <div class="key-display-container">
+                <span id="current-valid-key" class="key-display">CHAVE NÃO ENCONTRADA</span>
+                <button onclick="copyKeyToClipboard()" class="copy-button" id="copy-btn">
+                    <span id="copy-text">📋 COPIAR</span>
+                </button>
+            </div>
+
+            <p class="text-sm text-yellow-400 mt-2">AVISO: Esta chave está vinculada a este dispositivo/navegador até a data de expiração.</p>
+            <button onclick="document.getElementById('key-modal').classList.add('hidden')" class="key-submit-button mt-4 text-lg">
+                FECHAR
+            </button>
+        </div>
+    </div>
+
+    <div id="admin-modal" class="modal-key-dialog hidden">
+        <div class="modal-key-content">
+            <h3 class="text-3xl font-bold text-red-500 mb-4">👑 PAINEL DE GESTÃO DE CHAVES</h3>
+            <p class="text-yellow-400 mb-4">ACESSO CONCEDIDO: Admin Master Key ATIVA.</p>
+            
+            <div class="space-y-4 text-left">
+                <label class="block text-gray-200 font-bold">1. SELECIONE A DURAÇÃO DA NOVA KEY (Para o cliente):</label>
+                <select id="key-duration-select" class="w-full p-3 bg-gray-900/50 border border-red-500/50 rounded-lg text-neon-secondary text-lg">
+                    <option value="7">7 Dias (Padrão)</option>
+                    <option value="30">30 Dias</option>
+                    <option value="365">1 Ano (365 Dias)</option>
+                </select>
+                
+                <button onclick="adminGenerateNewKey()" class="key-submit-button bg-red-600 hover:bg-red-700 text-2xl mt-4">
+                    ⚠️ GERAR NOVA KEY COM DURAÇÃO
+                </button>
+                <p id="admin-message" class="error-message text-center mt-2"></p>
+                <p class="text-xs text-gray-500 text-center">A nova chave será automaticamente copiada para sua área de transferência.</p>
+            </div>
+
+            <button onclick="document.getElementById('admin-modal').classList.add('hidden'); handleAdminLogout();" class="key-generate-button mt-6 text-lg bg-red-800 hover:bg-red-900 border-none !text-white !p-3">
+                SAIR DO MODO ADMIN
+            </button>
+        </div>
+    </div>
+
+    <div id="main-hud-panel" class="main-panel-container">
+        <div class="hud-frame">
+            <header class="text-center mb-10">
+                <h1 class="text-5xl font-black uppercase neon-title text-neon-primary">
+                    ASSISTENTE <span class="text-neon-secondary">FF</span>
+                </h1>
+                <h2 class="text-xl font-light text-gray-300 mt-2">
+                    MÓDULO DE OTIMIZAÇÃO E ASSISTÊNCIA V4.0
+                </h2>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <div>
+                    <h3 class="text-2xl font-bold text-neon-secondary mb-4 border-b border-neon-secondary/50 pb-2">FUNÇÕES EXCLUSIVAS</h3>
+
+                    <div class="module-box flex items-center justify-between mb-4">
+                        <label for="toggle-optimization-input" class="text-xl font-medium text-gray-100">Otimização de Ping</label>
+                        <input type="checkbox" id="toggle-optimization-input" class="sr-only" onchange="toggleFeature('Optimization')"> 
+                        <div id="toggle-optimization" class="modern-switch" role="switch" onclick="document.getElementById('toggle-optimization-input').click()"></div>
+                    </div>
+
+                    <div class="module-box flex items-center justify-between mb-4">
+                        <label for="toggle-precision-input" class="text-xl font-medium text-gray-100">Anti-Recoil Avançado</label>
+                        <input type="checkbox" id="toggle-precision-input" class="sr-only" onchange="toggleFeature('Precision')"> 
+                        <div id="toggle-precision" class="modern-switch" role="switch" onclick="document.getElementById('toggle-precision-input').click()"></div>
+                    </div>
+
+                    <div class="module-box flex items-center justify-between mb-8">
+                        <label for="toggle-aimguide-input" class="text-xl font-medium text-gray-100">Assistência de Mira (AimGuide)</label>
+                        <input type="checkbox" id="toggle-aimguide-input" class="sr-only" onchange="toggleFeature('AimGuide')"> 
+                        <div id="toggle-aimguide" class="modern-switch" role="switch" onclick="document.getElementById('toggle-aimguide-input').click()"></div>
+                    </div>
+                    
+                    <h3 class="text-xl font-bold text-neon-primary mb-3">SELEÇÃO DE DPI: <span id="dpi-value" class="text-neon-secondary">50%</span></h3>
+                    <input type="range" id="dpi-slider" min="0" max="100" value="50" oninput="updateDPI(this.value)" class="w-full">
+                </div>
+
+                <div class="space-y-6">
+                    
+                    <div class="module-box border-l-4 border-neon-secondary">
+                        <h4 class="text-lg font-bold text-neon-secondary mb-3">DIAGNÓSTICO EM TEMPO REAL</h4>
+                        <p class="text-xl font-medium text-gray-100 mb-2">STATUS CONEXÃO</p>
+                        <div class="flex items-center justify-between">
+                            <svg class="w-1/3 h-12" viewBox="0 0 100 50" preserveAspectRatio="none" style="filter: drop-shadow(0 0 5px rgba(0, 234, 255, 0.5));">
+                                <polyline id="ping-graph" fill="none" stroke="var(--neon-secondary)" stroke-width="2" points="0,40 10,25 20,35 30,15 40,30 50,20 60,35 70,10 80,30 90,20 100,40"/>
+                            </svg>
+                            <p class="ping-display"><span id="ping-counter">15</span><span class="text-xl ml-1">MS</span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="module-box border-l-4 border-neon-primary">
+                        <h4 class="text-lg font-bold text-neon-primary mb-3">DETECÇÃO DE ERROS (V.O.L.S)</h4>
+                        <div id="vols-status" class="text-sm stable-status-text min-h-[5rem] text-gray-300 font-mono">
+                            VARREDURA COMPLETA. 0 ERROS ENCUDANDO. 
+                            <br><span class="status-secure">SYSTEM STATUS: SECURE.</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="text-center my-10">
+                <button onclick="activateModsAndLaunch()" class="activate-button uppercase">
+                    ATIVAR MODS E INICIAR JOGO
+                </button>
+            </div>
+            
+            <div class="key-info-footer">
+                <span id="key-display-text" class="key-text">KEY: [AUTENTICANDO...]</span>
+                <button onclick="displayCurrentKey()" class="copy-key-icon">
+                    <span id="copy-text-footer">VER EXPIRAÇÃO</span>
+                </button>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        
+        // =========================================================
+        // DEFINIÇÕES DE SEGURANÇA E ADMIN
+        // =========================================================
+        const KEY_STORAGE_ID = 'validAccessKey'; 
+        const STATE_STORAGE_ID = 'ffAssistantAppState'; 
+        const ADMIN_MASTER_KEY = 'ADM-123456-BOSS'; // <-- CHAVE MESTRA!
+        // =========================================================
+
+        const loginScreen = document.getElementById('login-screen');
+        const mainPanel = document.getElementById('main-hud-panel');
+        const loginErrorMsg = document.getElementById('login-error-message');
+        const loginButtonText = document.getElementById('login-text');
+        const keyInput = document.getElementById('key-input');
+        const slider = document.getElementById('dpi-slider');
+        const valueDisplay = document.getElementById('dpi-value');
+        
+        let appState = {
+            Optimization: false, AimGuide: false, Precision: false, AimPrecisionPercentage: 50,
+        };
+
+        // --- FUNÇÕES DE GERAÇÃO E VALIDAÇÃO DE KEY COM EXPIRAÇÃO ---
+
+        function generateRandomSixDigits() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        function generateNewAccessKey(durationDays = 7) { 
+            const part1 = generateRandomSixDigits();
+            const part2 = generateRandomSixDigits();
+            const part3 = generateRandomSixDigits();
+            const newKeyString = `${part1}-${part2}-${part3}`;
+            
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + durationDays);
+            
+            const keyData = {
+                key: newKeyString,
+                expiry: expiryDate.getTime(),
+                durationDays: durationDays
+            };
+            
+            localStorage.setItem(KEY_STORAGE_ID, JSON.stringify(keyData)); 
+            return newKeyString;
+        }
+        
+        function isKeyFormatValid(key) {
+            const keyRegex = /^(\d{6})-(\d{6})-(\d{6})$/;
+            return keyRegex.test(key);
+        }
+        
+        async function handleLogin(event) {
+            event.preventDefault(); 
+            
+            const enteredKey = keyInput.value.trim().toUpperCase();
+
+            loginErrorMsg.textContent = '';
+            loginButtonText.textContent = 'AUTENTICANDO...';
+            loginButtonText.parentElement.disabled = true;
+
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            if (enteredKey === ADMIN_MASTER_KEY) {
+                keyInput.value = '';
+                showAdminPanel();
+                return;
+            }
+
+            const storedKeyJSON = localStorage.getItem(KEY_STORAGE_ID);
+            let keyMatches = false;
+            let isExpired = true;
+
+            if (storedKeyJSON) {
+                try {
+                    const storedKeyData = JSON.parse(storedKeyJSON);
+                    
+                    if (enteredKey === storedKeyData.key) {
+                        keyMatches = true;
+                        if (Date.now() < storedKeyData.expiry) {
+                            isExpired = false;
+                        }
+                    }
+                } catch (e) {
+                    localStorage.removeItem(KEY_STORAGE_ID);
+                }
+            }
+            
+            // Lógica Central: Se a chave digitada for a MESTRE (para o cliente), armazena ela e loga.
+            // Nota: No nosso sistema front-end, a "chave mestra" para o cliente é a última chave gerada pelo Admin.
+            // Para simular a entrega de uma nova key, trataremos qualquer key 6-6-6 como "nova" se não houver uma válida.
+            if (!keyMatches && isKeyFormatValid(enteredKey)) {
+                 // Assumindo que o Admin entregou essa chave, a armazenamos localmente.
+                 generateNewAccessKey(7); // default 7 dias, mas idealmente teria uma duração vinculada.
+                 const keyData = JSON.parse(localStorage.getItem(KEY_STORAGE_ID));
+                 keyData.key = enteredKey;
+                 // Definir uma expiração padrão para a nova chave (ex: 7 dias a partir de agora)
+                 const newExpiryDate = new Date();
+                 newExpiryDate.setDate(newExpiryDate.getDate() + 7);
+                 keyData.expiry = newExpiryDate.getTime();
+                 keyData.durationDays = 7; 
+                 localStorage.setItem(KEY_STORAGE_ID, JSON.stringify(keyData));
+                 
+                 completeLogin();
+                 return;
+            }
+
+            if (keyMatches && !isExpired) {
+                completeLogin();
+                return;
+            }
+
+            if (keyMatches && isExpired) {
+                loginErrorMsg.textContent = 'ERRO [COD 408]: Sua Key EXPIROU. Solicite uma nova chave.';
+                localStorage.removeItem(KEY_STORAGE_ID); 
+            } else {
+                loginErrorMsg.textContent = 'ERRO [COD 403]: Chave inválida, expirada ou não reconhecida. Tente novamente.';
+            }
+
+            loginButtonText.textContent = 'CONECTAR AO SISTEMA';
+            loginButtonText.parentElement.disabled = false;
+            keyInput.value = '';
+        }
+
+        function completeLogin() {
+            loginScreen.style.display = 'none';
+            mainPanel.style.display = 'flex';
+            document.getElementById('main-body').classList.remove('login-screen-container');
+            
+            loadAppState(); 
+            initializeApp();
+            updateKeyInfoInFooter(); // Atualiza o rodapé com a Key
+        }
+
+        function copyKeyToClipboard() {
+            const keyElement = document.getElementById('current-valid-key');
+            const key = keyElement.textContent;
+            const copyBtn = document.getElementById('copy-text');
+
+            if (key && key !== 'CHAVE NÃO ENCONTRADA') {
+                navigator.clipboard.writeText(key).then(() => {
+                    copyBtn.textContent = '✅ COPIADO!';
+                    setTimeout(() => { copyBtn.textContent = '📋 COPIAR'; }, 2000);
+                }).catch(err => {
+                    alert("Erro ao copiar.");
+                });
+            }
+        }
+        
+        function updateKeyInfoInFooter() {
+            const storedKeyJSON = localStorage.getItem(KEY_STORAGE_ID);
+            const keyFooter = document.getElementById('key-display-text');
+            const keyData = storedKeyJSON ? JSON.parse(storedKeyJSON) : null;
+
+            if (keyData && keyData.key) {
+                const expiryDate = new Date(keyData.expiry);
+                const formattedDate = expiryDate.toLocaleDateString('pt-BR');
+                
+                keyFooter.innerHTML = `KEY: ${keyData.key} (EXP: <span class="text-neon-primary">${formattedDate}</span>)`;
+            } else {
+                keyFooter.textContent = 'KEY: [N/A] (FAÇA LOGIN)';
+            }
+        }
+
+        function displayCurrentKey() {
+            const storedKeyJSON = localStorage.getItem(KEY_STORAGE_ID);
+            const keyDisplayElement = document.getElementById('current-valid-key');
+            const keyModalInfo = document.getElementById('key-modal-info');
+            
+            if (storedKeyJSON) {
+                try {
+                    const keyData = JSON.parse(storedKeyJSON);
+                    const expiryDate = new Date(keyData.expiry);
+                    keyDisplayElement.textContent = keyData.key;
+                    
+                    const formattedDate = expiryDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    
+                    if (Date.now() >= keyData.expiry) {
+                         keyModalInfo.innerHTML = `STATUS: <span class="text-red-500 font-bold">EXPIRADA!</span>`;
+                    } else {
+                         keyModalInfo.innerHTML = `DURAÇÃO: ${keyData.durationDays} dias | Válida até: <span class="text-neon-secondary font-bold">${formattedDate}</span>`;
+                    }
+                } catch (e) {
+                     keyDisplayElement.textContent = 'Erro ao processar Key.';
+                     keyModalInfo.textContent = '';
+                }
+            } else {
+                keyDisplayElement.textContent = 'CHAVE NÃO ENCONTRADA';
+                keyModalInfo.innerHTML = '<span class="text-red-500 font-bold">Status: Não logado.</span>';
+            }
+            document.getElementById('key-modal').classList.remove('hidden');
+        }
+        
+        // --- FUNÇÕES DE ADMIN ---
+        function showAdminPanel() {
+            loginScreen.style.display = 'none'; 
+            mainPanel.style.display = 'none';   
+            document.getElementById('admin-modal').classList.remove('hidden'); 
+            document.getElementById('admin-message').textContent = '';
+        }
+        
+        function handleAdminLogout() {
+            document.getElementById('admin-modal').classList.add('hidden'); 
+            document.getElementById('login-screen').style.display = 'flex';
+        }
+
+        function adminGenerateNewKey() {
+            const select = document.getElementById('key-duration-select');
+            const durationDays = parseInt(select.value);
+            
+            const newKey = generateNewAccessKey(durationDays); 
+            
+            const adminMsg = document.getElementById('admin-message');
+            adminMsg.textContent = `✅ NOVA KEY GERADA: ${newKey} (Duração: ${durationDays} dias). COPIADA!`;
+            adminMsg.style.color = '#00eaff'; 
+            adminMsg.style.textShadow = '0 0 5px rgba(0, 234, 255, 0.8)';
+            
+            navigator.clipboard.writeText(newKey);
+        }
+        // --- FIM FUNÇÕES DE ADMIN ---
+
+        // --- FUNÇÕES DE PERSISTÊNCIA E SIMULAÇÃO ---
+
+        function saveAppState() {
+            appState.AimPrecisionPercentage = parseInt(document.getElementById('dpi-slider').value);
+            try {
+                localStorage.setItem(STATE_STORAGE_ID, JSON.stringify(appState));
+            } catch (e) { console.error("Erro ao salvar estado", e); }
+        }
+
+        function loadAppState() {
+            try {
+                const storedState = localStorage.getItem(STATE_STORAGE_ID);
+                if (storedState) {
+                    const loadedState = JSON.parse(storedState);
+                    appState = { ...appState, ...loadedState };
+
+                    const slider = document.getElementById('dpi-slider');
+                    if (slider) {
+                        slider.value = appState.AimPrecisionPercentage || 50;
+                        updateDPI(slider.value, true); 
+                    }
+                    
+                    ['Optimization', 'AimGuide', 'Precision'].forEach(feature => {
+                        const inputId = `toggle-${feature.toLowerCase()}-input`;
+                        const inputElement = document.getElementById(inputId);
+                        
+                        if (inputElement) {
+                            const shouldBeActive = appState[feature];
+                            if (inputElement.checked !== shouldBeActive) {
+                                inputElement.checked = shouldBeActive;
+                                toggleFeature(feature, true);
+                            }
+                        }
+                    });
+                }
+            } catch (e) { console.error("Erro ao carregar estado", e); }
+        }
+
+        function updateDPI(value, isLoad = false) {
+            appState.AimPrecisionPercentage = parseInt(value);
+            valueDisplay.textContent = `${appState.AimPrecisionPercentage}%`;
+            
+            const percentage = value + '%';
+            slider.style.background = `linear-gradient(to right, var(--neon-secondary) ${percentage}, var(--bg-inactive) ${percentage})`;
+
+            if (!isLoad) { saveAppState(); }
+        }
+
+        function toggleFeature(feature, isLoad = false) {
+            const inputId = `toggle-${feature.toLowerCase()}-input`;
+            const inputElement = document.getElementById(inputId);
+            const toggleId = `toggle-${feature.toLowerCase()}`;
+            const toggleElement = document.getElementById(toggleId);
+            
+            const willBeActive = inputElement.checked; 
+            appState[feature] = willBeActive;
+
+            if (!isLoad) { saveAppState(); }
+
+            if (toggleElement) {
+                toggleElement.classList.toggle('active', willBeActive);
+            }
+            
+            // Simulação de Status V.O.L.S
+            const statusElement = document.getElementById('vols-status');
+            const activeCount = Object.values(appState).filter(val => val === true).length;
+            
+            if (activeCount > 0) {
+                statusElement.innerHTML = `MODOS ATIVOS: ${activeCount}. DIAGNÓSTICO EM CURSO. 
+                <br><span class="text-yellow-400">STATUS: CUIDADO AO INICIAR.</span>`;
+            } else {
+                statusElement.innerHTML = `VARREDURA COMPLETA. 0 ERROS ENCUDANDO. 
+                <br><span class="status-secure">SYSTEM STATUS: SECURE.</span>`;
+            }
+        }
+        
+        let pingInterval;
+
+        function startPingSim() {
+            const pingCounter = document.getElementById('ping-counter');
+            const pingGraph = document.getElementById('ping-graph');
+            let history = Array(11).fill(40); // 11 pontos, valor inicial 40 (para 50 de altura)
+
+            clearInterval(pingInterval);
+
+            pingInterval = setInterval(() => {
+                const currentPing = Math.floor(Math.random() * (40 - 10) + 10);
+                pingCounter.textContent = currentPing;
+                
+                // Atualiza o histórico (normaliza o ping para a altura do gráfico 0-50)
+                // 10ms -> 45 (topo), 40ms -> 5 (base)
+                const normalizedHeight = 50 - ((currentPing - 10) / 30) * 40; 
+                
+                history.shift();
+                history.push(normalizedHeight);
+                
+                const points = history.map((h, i) => `${i * 10},${h}`).join(' ');
+                pingGraph.setAttribute('points', points);
+
+            }, 800);
+        }
+
+        function activateModsAndLaunch() {
+            // Lógica de ativação e lançamento
+            const activeCount = Object.values(appState).filter(val => val === true).length;
+            if (activeCount > 0) {
+                alert(`ATIVANDO: ${activeCount} MODS. INICIANDO FREE FIRE OTIMIZADO...`);
+            } else {
+                alert("Nenhuma função ativada. Iniciando Free Fire normalmente...");
+            }
+            
+            // Simula o lançamento do aplicativo (Deep Link)
+            const deepLinkUri = "garenafreefire://";
+            window.location.href = deepLinkUri;
+        }
+
+
+        function initializeApp() {
+            if (slider && valueDisplay) { updateDPI(appState.AimPrecisionPercentage, true); }
+            startPingSim(); // Inicia o simulador de ping no fundo
+        }
+
+        // Chama a função de verificação de login ao carregar
+        document.addEventListener('DOMContentLoaded', checkLoginStatus);
+        
+        // Função para checar o login (mantida da v3.0)
+        function checkLoginStatus() {
+            const storedKeyJSON = localStorage.getItem(KEY_STORAGE_ID);
+            
+            if (storedKeyJSON) {
+                try {
+                    const storedKeyData = JSON.parse(storedKeyJSON);
+                    
+                    if (Date.now() < storedKeyData.expiry) {
+                        completeLogin(); // Loga automaticamente
+                        return;
+                    } else {
+                        localStorage.removeItem(KEY_STORAGE_ID); // Expira
+                    }
+                } catch (e) {
+                    localStorage.removeItem(KEY_STORAGE_ID);
+                }
+            }
+            
+            keyInput.value = ''; 
+            loginScreen.style.display = 'flex';
+            mainPanel.style.display = 'none';
+            document.getElementById('main-body').classList.add('login-screen-container');
+
+            loadAppState(); 
+            initializeApp();
+        }
+
+    </script>
+</body>
+</html>
