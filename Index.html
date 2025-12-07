@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assistente FF – Módulo de Otimização V4.0</title>
+    <title>Assistente FF – Módulo de Calibração HUD V1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* ========================================================= */
@@ -15,311 +15,134 @@
             --bg-dark: #07061d; /* Fundo Ultra Escuro */
             --bg-card: rgba(10, 5, 20, 0.9); /* Fundo do Card */
             --bg-inactive: #1f1e33;
-            --shadow-primary: 0 0 25px rgba(161, 0, 255, 0.6);
-            --shadow-secondary: 0 0 25px rgba(0, 234, 255, 0.6);
+            --shadow-outer: 0 0 25px rgba(161, 0, 255, 0.6);
             --border-glow: 1px solid var(--neon-primary);
         }
 
         /* ========================================================= */
-        /* ESTILOS GERAIS E FUNDO */
+        /* ESTILOS DE LOGIN (NOVO DESIGN "GLASSMORFICO") */
         /* ========================================================= */
-        .futuristic-theme { 
-            background-color: var(--bg-dark); 
-            color: #e0f7fa; 
-            font-family: 'Inter', sans-serif; 
-            position: relative; 
-            min-height: 100vh;
-        }
-
-        /* Fundo de Vídeo e Efeito de Matriz */
-        #video-background { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; 
-            z-index: 0; opacity: 0.3; pointer-events: none; filter: brightness(0.7) blur(2px); 
-        }
-        #video-background iframe { 
-            width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.77vh; 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-        }
-
-        /* Efeito de Scanline/Matrix (simulação de código no fundo) */
-        .matrix-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            z-index: 1;
-            background-image: repeating-linear-gradient(
-                to bottom,
-                rgba(0, 0, 0, 0.05), 
-                rgba(0, 0, 0, 0.5) 1px,
-                transparent 1px,
-                transparent 2px
-            ),
-            linear-gradient(
-                to bottom, 
-                rgba(7, 6, 29, 0.3), 
-                rgba(7, 6, 29, 1)
-            );
-            pointer-events: none;
-        }
-
-        /* ========================================================= */
-        /* ESTILOS DO NOVO PAINEL CENTRAL (Assistente FF) */
-        /* ========================================================= */
-        .main-panel-container {
-            position: relative;
-            z-index: 10;
-            padding-top: 5rem;
-            padding-bottom: 5rem;
-            display: flex;
-            justify-content: center;
-        }
-
-        .hud-frame {
-            width: 100%;
-            max-width: 900px;
-            padding: 2rem;
-            background-color: var(--bg-card);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(161, 0, 255, 0.4);
-            border-radius: 20px;
-            box-shadow: var(--shadow-primary);
-            position: relative;
-            animation: boot-up 0.8s ease-out forwards;
-        }
-
-        /* Animação de entrada do painel */
-        @keyframes boot-up {
-            from { opacity: 0; transform: translateY(50px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        /* Efeito de Borda Neon Animada */
-        .hud-frame::before {
-            content: '';
-            position: absolute;
-            top: -5px; bottom: -5px; left: -5px; right: -5px;
-            border-radius: 25px;
-            background: linear-gradient(45deg, var(--neon-primary), var(--neon-secondary), var(--neon-primary));
-            background-size: 400% 400%;
-            z-index: -1;
-            opacity: 0.8;
-            filter: blur(15px);
-            transition: all 0.5s ease-in-out;
-            animation: border-glow-animate 5s infinite alternate;
-        }
-
-        @keyframes border-glow-animate {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .neon-title {
-            text-shadow: 0 0 15px var(--neon-primary), 0 0 35px var(--neon-secondary);
-        }
-
-        /* Estilo para as caixas de função e diagnóstico */
-        .module-box {
-            padding: 1.5rem;
-            background-color: rgba(30, 30, 50, 0.7);
-            border-radius: 12px;
-            border-left: 5px solid var(--neon-primary);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-        }
+        .login-screen-container { height: 100vh; display: flex; justify-content: center; align-items: center; text-align: center; }
         
-        /* Estilos dos Toggles Modernos */
-        .modern-switch {
-            width: 60px; height: 30px; 
-            background-color: var(--bg-inactive); 
-            border-radius: 9999px; position: relative; cursor: pointer; 
-            transition: background-color 0.3s, box-shadow 0.3s; 
-            border: 2px solid var(--neon-primary)/20;
-        }
-        .modern-switch:before {
-            content: ''; position: absolute; top: 3px; left: 3px; 
-            width: 20px; height: 20px; background-color: #e0f7fa; 
-            border-radius: 50%; transition: transform 0.3s, background-color 0.3s; 
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-        }
-        .modern-switch.active {
-            background-color: var(--neon-secondary); 
-            box-shadow: 0 0 15px var(--neon-secondary); 
-        }
-        .modern-switch.active:before {
-            transform: translateX(30px); 
-            background-color: var(--neon-primary); 
-            box-shadow: 0 0 10px var(--neon-primary);
-        }
-
-        /* Estilos para a parte de Conexão/Ping */
-        .ping-display {
-            font-size: 3rem;
-            font-weight: bold;
-            color: var(--neon-secondary);
-            text-shadow: 0 0 10px var(--neon-secondary);
-        }
-
-        .status-secure {
-            color: #00ff99;
-            font-weight: bold;
-            text-shadow: 0 0 5px rgba(0, 255, 153, 0.6);
-            font-family: monospace;
-        }
-        
-        /* Estilos do Slider DPI */
-        #dpi-slider { 
-            -webkit-appearance: none; appearance: none; width: 100%; height: 10px; 
-            border-radius: 5px; outline: none; transition: opacity .2s; 
-            background: var(--bg-inactive); 
-        }
-        #dpi-slider::-webkit-slider-thumb { 
-            -webkit-appearance: none; appearance: none; width: 25px; height: 25px; 
-            border-radius: 50%; background: var(--neon-secondary); cursor: pointer; 
-            box-shadow: 0 0 10px var(--neon-secondary); border: 3px solid var(--bg-dark); 
-        }
-
-        /* Estilo do Botão Principal ATIVAR */
-        .activate-button {
-            background: linear-gradient(90deg, #ff00ff 0%, var(--neon-primary) 100%);
-            color: white;
-            padding: 1rem 3rem;
-            font-size: 1.5rem;
-            font-weight: bold;
-            border-radius: 15px;
-            border: 3px solid var(--neon-secondary);
-            box-shadow: 0 0 20px #ff00ff, 0 0 40px var(--neon-primary);
-            transition: all 0.3s;
-            text-shadow: 0 0 5px black;
-        }
-        .activate-button:hover {
-            background: linear-gradient(90deg, var(--neon-secondary) 0%, #00eaff 100%);
-            color: var(--bg-dark);
-            border-color: var(--neon-primary);
-            box-shadow: 0 0 30px var(--neon-secondary), 0 0 60px var(--neon-secondary);
-            transform: scale(1.02);
-        }
-
-        /* Estilo da área de Key (roda-pé) */
-        .key-info-footer {
-            background-color: rgba(30, 30, 50, 0.7);
-            padding: 0.75rem;
-            border-radius: 10px;
-            font-family: monospace;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .key-text {
-            color: var(--neon-secondary);
-            font-size: 1rem;
-            letter-spacing: 1px;
-        }
-
-        .copy-key-icon {
-            color: white;
-            background: var(--neon-primary);
-            padding: 0.5rem;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.8rem;
-        }
-        .copy-key-icon:hover {
-            background: var(--neon-secondary);
-            color: var(--bg-dark);
-            box-shadow: 0 0 10px var(--neon-secondary);
-        }
-
-        /* ========================================================= */
-        /* ESTILOS DE LOGIN (MANTIDOS E ADAPTADOS) */
-        /* ========================================================= */
-        .login-screen-container { 
-            height: 100vh; display: flex; justify-content: center; align-items: center; text-align: center; 
-        }
-        @keyframes login-fade-in {
-            from { opacity: 0; transform: translateY(20px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
         .login-box {
-            width: 90%; max-width: 450px; padding: 3rem; 
-            border: 2px solid rgba(0, 234, 255, 0.6); 
-            background: rgba(10, 5, 20, 0.85); 
-            backdrop-filter: blur(25px) saturate(180%); 
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4), 0 0 60px rgba(161, 0, 255, 0.4); 
-            border-radius: 20px; 
-            animation: login-fade-in 0.8s ease-out forwards; 
-            position: relative;
+            width: 90%; max-width: 450px; padding: 2.5rem; 
+            border: 1px solid rgba(0, 234, 255, 0.4); /* Borda mais suave */
+            background: rgba(10, 5, 20, 0.75); /* Fundo semi-transparente */
+            backdrop-filter: blur(20px) saturate(150%); /* Efeito de vidro / Holograma */
+            -webkit-backdrop-filter: blur(20px) saturate(150%);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2), 0 0 50px rgba(161, 0, 255, 0.3); /* Sombra externa */
+            border-radius: 20px; /* Bordas mais arredondadas */
+            transform: perspective(1000px) rotateX(1deg); /* Leve 3D tilt */
         }
-        .login-box::before {
-            content: '[STATUS: READY]';
-            position: absolute; top: 10px; left: 15px; font-family: monospace; font-size: 0.75rem; color: #38bdf8; opacity: 0.7;
-        }
+        
         #key-input {
-            width: 100%; padding: 1.2rem; background-color: rgba(0, 0, 0, 0.3); 
-            border: 2px solid var(--neon-primary); border-bottom: 4px solid var(--neon-secondary); 
-            color: var(--neon-secondary); font-size: 1.4rem; text-align: center; border-radius: 8px; 
-            margin-bottom: 2rem; box-shadow: 0 0 10px rgba(161, 0, 255, 0.2); outline: none;
-            letter-spacing: 3px; transition: all 0.3s; font-family: monospace; text-transform: uppercase;
+            width: 100%; padding: 1rem; background-color: rgba(255, 255, 255, 0.05); /* Fundo quase transparente */
+            border: 1px solid var(--neon-primary);
+            color: var(--neon-secondary); font-size: 1.25rem; text-align: center; border-radius: 10px;
+            margin-bottom: 1.5rem; box-shadow: 0 0 15px rgba(161, 0, 255, 0.3); outline: none;
+            letter-spacing: 2px;
+            transition: all 0.3s;
         }
-        #key-input:focus { 
-            border-color: var(--neon-secondary); background-color: rgba(0, 234, 255, 0.1); 
-            box-shadow: 0 0 30px var(--neon-secondary), 0 0 10px var(--neon-primary); 
+        #key-input::placeholder { color: rgba(0, 234, 255, 0.5); }
+        #key-input:focus { border-color: var(--neon-secondary); background-color: rgba(0, 234, 255, 0.05); box-shadow: 0 0 25px var(--neon-secondary); }
+        
+        .key-submit-button, .key-generate-button {
+            font-weight: bold; padding: 0.8rem 1.5rem; border-radius: 10px; transition: all 0.3s; border: none;
+            width: 100%; text-transform: uppercase;
         }
         .key-submit-button {
-            font-weight: bold; padding: 1rem 1.5rem; border-radius: 8px; transition: all 0.3s; border: none;
-            width: 100%; text-transform: uppercase; letter-spacing: 1px;
-            background: var(--neon-secondary); color: var(--bg-dark); box-shadow: 0 0 15px var(--neon-secondary);
-            font-size: 1.5rem;
+            background: var(--neon-secondary); color: var(--bg-dark); margin-bottom: 1rem;
+            box-shadow: 0 0 10px var(--neon-secondary);
         }
-        .key-submit-button:hover:not(:disabled) { 
-            box-shadow: 0 0 40px var(--neon-secondary), 0 0 10px var(--neon-primary); 
-            transform: scale(1.01); 
+        .key-submit-button:hover { box-shadow: 0 0 30px var(--neon-secondary), 0 0 5px var(--neon-primary); transform: scale(1.02); }
+        
+        .key-generate-button {
+            background: transparent; color: var(--neon-primary); border: 1px solid var(--neon-primary);
+            font-size: 0.9rem;
         }
-        .key-submit-button:disabled {
-            background: #3f3b55; cursor: not-allowed; box-shadow: none; color: #a0a0a0;
-        }
-        .error-message { 
-            color: #ff3366; text-shadow: 0 0 8px rgba(255, 51, 102, 1); margin-top: 1.5rem; 
-            font-size: 1rem; font-weight: 600; border-top: 1px dashed #ff3366; padding-top: 1rem;
-            font-family: monospace;
-        }
+        .key-generate-button:hover { box-shadow: 0 0 15px var(--neon-primary); background: rgba(161, 0, 255, 0.1); }
 
+        .error-message { color: #ff3366; text-shadow: 0 0 5px rgba(255, 51, 102, 0.8); margin-top: 1rem; font-size: 0.9rem; }
+        
+        /* Estilo para a caixa de diálogo da Key (popup) */
         .modal-key-dialog {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.9); z-index: 100;
+            background-color: rgba(0, 0, 0, 0.8); z-index: 100;
             display: flex; justify-content: center; align-items: center;
         }
         .modal-key-content {
-            background: var(--bg-card); backdrop-filter: blur(15px);
-            padding: 3rem; border-radius: 16px;
-            border: 3px solid var(--neon-secondary); box-shadow: 0 0 70px var(--neon-secondary)/50;
+            background: rgba(10, 5, 20, 0.9); backdrop-filter: blur(15px);
+            padding: 2rem; border-radius: 16px;
+            border: 3px solid var(--neon-secondary); box-shadow: 0 0 50px var(--neon-secondary);
             width: 90%; max-width: 550px; text-align: center;
         }
         .key-display-container {
             display: flex; align-items: center; justify-content: space-between;
-            background-color: var(--bg-inactive); border: 1px solid var(--neon-secondary);
-            border-radius: 8px; margin: 1.5rem 0; padding: 0.75rem; 
+            background-color: var(--bg-inactive); 
+            border: 1px solid var(--neon-secondary);
+            border-radius: 8px;
+            margin: 1rem 0;
+            padding: 0.5rem;
         }
         .key-display {
-            color: var(--neon-secondary); font-size: 1.5rem; padding: 0.5rem; 
-            font-family: monospace; letter-spacing: 3px; word-break: break-all;
-            flex-grow: 1; text-align: left; padding-left: 1rem;
+            color: var(--neon-secondary);
+            font-size: 1.4rem; padding: 0.5rem; 
+            font-family: monospace; letter-spacing: 3px;
+            word-break: break-all;
+            flex-grow: 1;
+            text-align: left;
+            padding-left: 1rem;
         }
         .copy-button {
-            background: var(--neon-primary); color: white; padding: 0.75rem 1rem; 
-            border-radius: 6px; margin-left: 15px; transition: background 0.2s, transform 0.2s;
-            text-transform: uppercase; font-weight: 700;
+            background: var(--neon-primary); color: white;
+            padding: 0.75rem; border-radius: 6px; margin-left: 10px;
+            transition: background 0.2s, transform 0.2s;
         }
         .copy-button:hover {
-            background: var(--neon-secondary); color: var(--bg-dark); transform: scale(1.05);
+            background: var(--neon-secondary);
+            transform: scale(1.05);
         }
-        .key-generate-button {
-            background: transparent; color: var(--neon-primary); border: 2px solid var(--neon-primary); 
-            font-size: 1rem; padding: 0.8rem 1.5rem; border-radius: 8px; transition: all 0.3s;
-        }
-        .key-generate-button:hover { 
-            box-shadow: 0 0 20px var(--neon-primary); background: rgba(161, 0, 255, 0.2); 
-        }
+
+        /* ========================================================= */
+        /* ESTILOS DO PAINEL E ANIMAÇÕES (MANTIDOS) */
+        /* ========================================================= */
+        
+        @keyframes pulse-cyan { from { box-shadow: 0 0 5px var(--neon-secondary), 0 0 10px var(--neon-secondary); } to { box-shadow: 0 0 15px var(--neon-secondary), 0 0 35px var(--neon-secondary); } }
+        @keyframes section-boot-up { 0% { opacity: 0; transform: translateY(30px) scale(0.98); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+        .stable-status-text { min-height: 2.5rem; white-space: normal; display: flex; align-items: center; }
+        .section-enter-animation { animation: section-boot-up 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+        @keyframes progress-scan { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .progress-bar { height: 12px; background-color: var(--bg-inactive); border-radius: 6px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0%; transition: width 0.4s cubic-bezier(0.23, 1, 0.32, 1); border-radius: 6px; }
+        .progress-fill.active { background: var(--neon-primary); background-image: linear-gradient( 45deg, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0) 75% ); background-size: 200% 100%; animation: progress-scan 2s linear infinite; box-shadow: 0 0 10px var(--neon-primary); }
+        .futuristic-theme { background-color: var(--bg-dark); color: #e0f7fa; font-family: 'Inter', sans-serif; position: relative; z-index: 1; }
+        .hud-card { background-color: var(--bg-card); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: var(--border-glow); box-shadow: var(--shadow-outer); position: relative; overflow: hidden; border-radius: 16px; }
+        .hud-card::before, .hud-card::after { content: ''; position: absolute; width: 30px; height: 30px; border: 2px solid var(--neon-secondary); z-index: 10; }
+        .hud-card::before { top: -2px; left: -2px; border-right: none; border-bottom: none; transform: skewX(-15deg); opacity: 0.5; }
+        .hud-card::after { bottom: -2px; right: -2px; border-left: none; border-top: none; transform: skewX(-15deg); opacity: 0.5; }
+        .modern-switch { width: 60px; height: 30px; background-color: var(--bg-inactive); border-radius: 9999px; position: relative; cursor: pointer; transition: background-color 0.3s, box-shadow 0.3s; border: 2px solid var(--neon-primary)/20; }
+        .modern-switch:before { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background-color: #e0f7fa; border-radius: 50%; transition: transform 0.3s, background-color 0.3s; box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); }
+        .modern-switch.active { background-color: var(--neon-secondary); animation: pulse-cyan 1.5s infinite alternate; }
+        .modern-switch.active:before { transform: translateX(30px); background-color: var(--neon-primary); box-shadow: 0 0 10px var(--neon-primary); }
+        .reinforced-button { border: 4px solid var(--neon-secondary); background: linear-gradient(45deg, var(--neon-primary) 0%, #ff00ff 100%); box-shadow: 0 0 15px var(--neon-primary), 0 0 30px var(--neon-primary); text-shadow: 0 0 5px rgba(0, 0, 0, 0.8); letter-spacing: 2px; }
+        .reinforced-button:hover { background: var(--neon-secondary); color: var(--bg-dark) !important; border-color: var(--neon-primary); box-shadow: 0 0 30px var(--neon-secondary), 0 0 60px var(--neon-secondary); transform: scale(1.05) translateY(-2px); }
+        .section-simulation-panel { display: none; }
+        .neon-glow { text-shadow: 0 0 10px var(--neon-primary), 0 0 30px var(--neon-secondary); }
+        
+        #video-background { position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: 0; opacity: 0.3; pointer-events: none; transition: opacity 0.5s ease-in-out; display: block; filter: brightness(0.7) blur(2px); }
+        #video-background iframe { width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.77vh; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        
+        #aim-precision-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 10px; border-radius: 5px; outline: none; opacity: 0.9; transition: opacity .2s; background: var(--bg-inactive); }
+        #aim-precision-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 25px; height: 25px; border-radius: 50%; background: var(--neon-secondary); cursor: pointer; box-shadow: 0 0 10px var(--neon-secondary); border: 3px solid var(--bg-dark); }
+        #aim-precision-slider::-moz-range-thumb { width: 25px; height: 25px; border-radius: 50%; background: var(--neon-secondary); cursor: pointer; box-shadow: 0 0 10px var(--neon-secondary); border: 3px solid var(--bg-dark); }
+        
+        @keyframes reticle-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes reticle-pulse { 0% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 0.9; } }
+        .reticle-spin { animation: reticle-spin linear infinite; transform-origin: 50px 50px; }
+        .reticle-base { animation: reticle-pulse ease-in-out infinite; transform-origin: 50px 50px; }
+        @keyframes flicker { 0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% { opacity: 0.99; text-shadow: 0 0 5px var(--neon-secondary); } 20%, 21.999%, 63%, 63.999%, 65%, 69.999% { opacity: 0.4; text-shadow: none; } }
+        #recoil-stabilizer.neon-glow { animation: flicker 4s infinite; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
         
         #main-hud-panel { display: none; }
     </style>
@@ -339,7 +162,7 @@
         }
     </script>
 </head>
-<body class="futuristic-theme" id="main-body">
+<body class="futuristic-theme min-h-screen font-sans p-4 md:p-8" id="main-body">
     
     <div id="video-background">
         <iframe 
@@ -349,211 +172,229 @@
             allowfullscreen>
         </iframe>
     </div>
-    <div class="matrix-overlay"></div>
 
     <div id="login-screen" class="login-screen-container">
         <div class="login-box">
             <h1 class="text-4xl md:text-5xl font-black tracking-tighter uppercase neon-glow text-neon-primary mb-2">
                 ASSISTENTE <span class="text-neon-secondary">FF</span>
             </h1>
-            <h2 class="text-xl text-gray-300 mb-8 font-light border-b-2 border-neon-secondary/30 pb-3">
-                <span class="text-neon-secondary font-bold">MÓDULO DE AUTENTICAÇÃO HFR-42</span>
+            <h2 class="text-xl text-gray-300 mb-8 font-light border-b border-neon-primary/20 pb-3">
+                <span class="text-neon-secondary">MÓDULO 42.1 |</span> AUTENTICAÇÃO NECESSÁRIA
             </h2>
 
             <form id="login-form" onsubmit="handleLogin(event)">
-                <label for="key-input" class="block text-left text-sm font-semibold text-gray-200 mb-2">
-                    🔑 CHAVE DE ACESSO EXCLUSIVA:
-                </label>
                 <input type="text" id="key-input" placeholder="XXXXXX-YYYYYY-ZZZZZZ" required maxlength="20">
-                
                 <button type="submit" class="key-submit-button text-2xl">
                     <span id="login-text">CONECTAR AO SISTEMA</span>
                 </button>
             </form>
             
+            <button onclick="generateAndDisplayNewKey()" class="key-generate-button text-base mt-2">
+                ⚙️ GERAR & SALVAR NOVA KEY DE ACESSO
+            </button>
+
             <p id="login-error-message" class="error-message"></p>
         </div>
     </div>
+
     <div id="key-modal" class="modal-key-dialog hidden">
         <div class="modal-key-content">
-            <h3 class="text-3xl font-bold text-neon-primary mb-4">🔑 STATUS DA CHAVE DE ACESSO</h3>
-            
-            <p class="text-gray-300 mb-4" id="key-modal-info">Verificando expiração...</p>
+            <h3 class="text-3xl font-bold text-neon-primary mb-4">🔑 Chave de Acesso Válida</h3>
+            <p class="text-gray-300 mb-4">Use a chave abaixo para fazer o login:</p>
             
             <div class="key-display-container">
-                <span id="current-valid-key" class="key-display">CHAVE NÃO ENCONTRADA</span>
+                <span id="current-valid-key" class="key-display"></span>
                 <button onclick="copyKeyToClipboard()" class="copy-button" id="copy-btn">
                     <span id="copy-text">📋 COPIAR</span>
                 </button>
             </div>
 
-            <p class="text-sm text-yellow-400 mt-2">AVISO: Esta chave está vinculada a este dispositivo/navegador até a data de expiração.</p>
+            <p class="text-sm text-yellow-400 mt-2">AVISO: Esta chave é armazenada apenas no seu navegador. Salve-a.</p>
             <button onclick="document.getElementById('key-modal').classList.add('hidden')" class="key-submit-button mt-4 text-lg">
                 FECHAR
             </button>
         </div>
     </div>
 
-    <div id="admin-modal" class="modal-key-dialog hidden">
-        <div class="modal-key-content">
-            <h3 class="text-3xl font-bold text-red-500 mb-4">👑 PAINEL DE GESTÃO DE CHAVES</h3>
-            <p class="text-yellow-400 mb-4">ACESSO CONCEDIDO: Admin Master Key ATIVA.</p>
-            
-            <div class="space-y-4 text-left">
-                <label class="block text-gray-200 font-bold">1. SELECIONE A DURAÇÃO DA NOVA KEY (Para o cliente):</label>
-                <select id="key-duration-select" class="w-full p-3 bg-gray-900/50 border border-red-500/50 rounded-lg text-neon-secondary text-lg">
-                    <option value="7">7 Dias (Padrão)</option>
-                    <option value="15">15 Dias</option>
-                    <option value="30">30 Dias</option>
-                </select>
-                
-                <button onclick="adminGenerateNewKey()" class="key-submit-button bg-red-600 hover:bg-red-700 text-2xl mt-4">
-                    ⚠️ GERAR NOVA KEY COM DURAÇÃO
+    <div id="main-hud-panel" class="max-w-7xl mx-auto space-y-8 relative z-10">
+
+        <header class="text-center pt-6 pb-4 md:pt-10">
+            <h1 class="text-6xl md:text-7xl font-black tracking-tighter uppercase neon-glow text-neon-primary transition-all duration-500" id="main-title">
+                Assistente FF
+            </h1>
+            <h2 class="text-2xl md:text-3xl font-light text-neon-secondary mt-2 transition-all duration-500">
+                Módulo Cyber-Calibração V2.0 | Status: <span class="text-green-400 font-bold">ONLINE</span>
+            </h2>
+            <p class="mt-4 text-base text-gray-200 max-w-4xl mx-auto hud-card py-3 px-6 rounded-xl transition-all duration-500 border-none shadow-xl flex justify-between items-center">
+                <span>Clique nos controles para iniciar o diagnóstico e otimizar. 🛠️</span>
+                <button onclick="displayCurrentKey()" class="text-xs font-bold text-neon-secondary hover:text-white transition duration-200 ml-4">
+                    [VER KEY ATUAL]
                 </button>
-                <p id="admin-message" class="error-message text-center mt-2"></p>
-                <p class="text-xs text-gray-500 text-center">A nova chave será automaticamente copiada para sua área de transferência.</p>
+            </p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            <div class="md:col-span-1 space-y-8">
+                <section class="hud-card p-6 md:p-8 rounded-2xl space-y-8">
+                    <h3 class="text-3xl font-bold text-neon-primary border-b border-neon-primary/30 pb-3">
+                        <span class="text-neon-secondary">//</span> Painel de Controle
+                    </h3>
+
+                    <div class="space-y-6"> 
+                        
+                        <div class="flex items-center justify-between p-3 bg-gray-900/40 rounded-lg border-l-4 border-neon-primary/50 hover:border-neon-secondary transition">
+                            <label for="toggle-optimization-input" class="text-lg font-medium text-gray-100">OTIMIZAÇÃO DE FPS</label>
+                            <input type="checkbox" id="toggle-optimization-input" class="sr-only" onchange="toggleFeature('Optimization')"> 
+                            <div id="toggle-optimization" class="modern-switch" role="switch" aria-checked="false" aria-labelledby="toggle-optimization-input" onclick="document.getElementById('toggle-optimization-input').click()"></div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 bg-gray-900/40 rounded-lg border-l-4 border-neon-primary/50 hover:border-neon-secondary transition">
+                            <label for="toggle-aimguide-input" class="text-lg font-medium text-gray-100">ASSISTÊNCIA DE MIRA</label>
+                            <input type="checkbox" id="toggle-aimguide-input" class="sr-only" onchange="toggleFeature('AimGuide')">
+                            <div id="toggle-aimguide" class="modern-switch" role="switch" aria-checked="false" aria-labelledby="toggle-aimguide-input" onclick="document.getElementById('toggle-aimguide-input').click()"></div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 bg-gray-900/40 rounded-lg border-l-4 border-neon-primary/50 hover:border-neon-secondary transition">
+                            <label for="toggle-precision-input" class="text-lg font-medium text-gray-100">ANTI-RECOIL AVANÇADO</label>
+                            <input type="checkbox" id="toggle-precision-input" class="sr-only" onchange="toggleFeature('Precision')">
+                            <div id="toggle-precision" class="modern-switch" role="switch" aria-checked="false" aria-labelledby="toggle-precision-input" onclick="document.getElementById('toggle-precision-input').click()"></div>
+                        </div>
+
+                    </div>
+                </section>
+                
+                <section class="hud-card p-6 md:p-8 rounded-2xl space-y-4 border-neon-secondary">
+                    <label for="aim-precision-slider" class="text-xl font-bold text-neon-secondary flex justify-between items-center border-b border-neon-secondary/50 pb-2">
+                        <span>SELETOR DE SENSIBILIDADE (DPI)</span>
+                    </label>
+                    <span id="aim-precision-value" class="block text-center text-5xl font-extrabold text-neon-secondary neon-glow transition-all duration-300">50%</span>
+                    <input type="range" id="aim-precision-slider" min="0" max="100" value="50" oninput="updateAimPrecision(this.value)" class="w-full">
+                </section>
             </div>
 
-            <button onclick="document.getElementById('admin-modal').classList.add('hidden'); handleAdminLogout();" class="key-generate-button mt-6 text-lg bg-red-800 hover:bg-red-900 border-none !text-white !p-3">
-                SAIR DO MODO ADMIN
+
+            <div class="md:col-span-2 space-y-6">
+                
+                <h3 class="text-3xl font-bold text-neon-primary border-b border-neon-primary/30 pb-3">
+                    <span class="text-neon-secondary">//</span> Diagnóstico em Tempo Real
+                </h3>
+
+                <div id="section-optimization" class="hud-card p-6 rounded-xl section-simulation-panel border-l-4 border-neon-primary">
+                    <h4 class="text-xl font-bold mb-4 text-neon-primary">STATUS > OTIMIZAÇÃO_NÚCLEO</h4>
+                    <div id="optimization-simulation" class="text-lg font-mono space-y-3 terminal-mono p-0 bg-transparent">
+                        <div id="opt-status-text" class="stable-status-text"></div>
+                        <div class="grid grid-cols-2 gap-4 text-sm pt-2 border-t border-neon-secondary/20">
+                            <p>FPS ATUAL: <span id="fps-counter" class="text-3xl text-neon-secondary neon-glow font-bold">30</span></p>
+                            <p class="text-right">CARGA CPU: <span class="text-green-400">0.8%</span> | RAM: <span class="text-yellow-400">75%</span></p>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="opt-progress-fill" class="progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="section-aimguide" class="hud-card p-6 rounded-xl section-simulation-panel border-l-4 border-neon-secondary">
+                    <h4 class="text-xl font-bold mb-4 text-neon-primary">STATUS > ASSISTÊNCIA_MIRA</h4>
+                    <div id="aimguide-simulation" class="text-center p-6 space-y-4 terminal-mono p-0 bg-transparent">
+                        <div id="aim-status-text" class="text-xl stable-status-text mx-auto"></div>
+                        <div class="flex justify-center py-4">
+                            <svg id="aim-reticle" class="w-24 h-24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <g class="reticle-spin">
+                                    <circle cx="50" cy="50" r="45" stroke="var(--neon-primary)" stroke-width="2" stroke-dasharray="10 5" stroke-opacity="0.7"/>
+                                </g>
+                                <g class="reticle-base" transform="translate(50, 50) scale(1) translate(-50, -50)">
+                                    <line x1="10" y1="50" x2="90" y2="50" stroke="var(--neon-secondary)" stroke-width="2"/>
+                                    <line x1="50" y1="10" x2="50" y2="90" stroke="var(--neon-secondary)" stroke-width="2"/>
+                                    <circle cx="50" cy="50" r="5" fill="var(--neon-secondary)"/>
+                                </g>
+                                <text x="50" y="55" font-size="8" text-anchor="middle" fill="var(--neon-secondary)" font-family="Consolas, Monospace">BUSCA...</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="section-precision" class="hud-card p-6 rounded-xl section-simulation-panel border-l-4 border-neon-primary">
+                    <h4 class="text-xl font-bold mb-4 text-neon-primary">STATUS > ANTI_RECOIL</h4>
+                    <div id="precision-simulation" class="text-lg font-mono space-y-3 terminal-mono p-0 bg-transparent">
+                        <div id="prec-status-text" class="stable-status-text"></div>
+                        <div class="grid grid-cols-2 gap-4 text-sm pt-2 border-t border-neon-secondary/20">
+                            <p>DPI SELECIONADO: <span id="prec-value" class="text-3xl text-neon-secondary neon-glow font-bold">50%</span></p>
+                            <div class="text-right">
+                                ESTABILIDADE: 
+                                <span id="recoil-stabilizer" class="text-3xl font-black text-neon-secondary transition-all duration-300 animate-pulse inline-block ml-2">
+                                    [ | | ]
+                                </span>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="prec-progress-fill" class="progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="section-gamebutton" class="py-10 flex justify-center">
+            <button id="ff-launch-button"
+               onclick="openFreeFireApp()"
+               class="px-8 py-4 rounded-xl text-xl md:text-2xl font-extrabold uppercase transition duration-300 reinforced-button text-white">
+                ▶️ INICIAR FREE FIRE OTIMIZADO
             </button>
         </div>
-    </div>
 
-    <div id="main-hud-panel" class="main-panel-container">
-        <div class="hud-frame">
-            <header class="text-center mb-10">
-                <h1 class="text-5xl font-black uppercase neon-title text-neon-primary">
-                    ASSISTENTE <span class="text-neon-secondary">FF</span>
-                </h1>
-                <h2 class="text-xl font-light text-gray-300 mt-2">
-                    MÓDULO DE OTIMIZAÇÃO E ASSISTÊNCIA V4.0
-                </h2>
-            </header>
+        <footer class="text-center py-8 border-t border-neon-primary/20 mt-10 text-gray-500 text-sm">
+            <p>Módulo de Calibração **HFR-42** | Versão **V10.0** | &copy; 2025 Assistente FF.</p>
+        </footer>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                
-                <div>
-                    <h3 class="text-2xl font-bold text-neon-secondary mb-4 border-b border-neon-secondary/50 pb-2">FUNÇÕES EXCLUSIVAS</h3>
-
-                    <div class="module-box flex items-center justify-between mb-4">
-                        <label for="toggle-optimization-input" class="text-xl font-medium text-gray-100">Otimização de Ping</label>
-                        <input type="checkbox" id="toggle-optimization-input" class="sr-only" onchange="toggleFeature('Optimization')"> 
-                        <div id="toggle-optimization" class="modern-switch" role="switch" onclick="document.getElementById('toggle-optimization-input').click()"></div>
-                    </div>
-
-                    <div class="module-box flex items-center justify-between mb-4">
-                        <label for="toggle-precision-input" class="text-xl font-medium text-gray-100">Anti-Recoil Avançado</label>
-                        <input type="checkbox" id="toggle-precision-input" class="sr-only" onchange="toggleFeature('Precision')"> 
-                        <div id="toggle-precision" class="modern-switch" role="switch" onclick="document.getElementById('toggle-precision-input').click()"></div>
-                    </div>
-
-                    <div class="module-box flex items-center justify-between mb-8">
-                        <label for="toggle-aimguide-input" class="text-xl font-medium text-gray-100">Assistência de Mira (AimGuide)</label>
-                        <input type="checkbox" id="toggle-aimguide-input" class="sr-only" onchange="toggleFeature('AimGuide')"> 
-                        <div id="toggle-aimguide" class="modern-switch" role="switch" onclick="document.getElementById('toggle-aimguide-input').click()"></div>
-                    </div>
-                    
-                    <h3 class="text-xl font-bold text-neon-primary mb-3">SELEÇÃO DE DPI: <span id="dpi-value" class="text-neon-secondary">50%</span></h3>
-                    <input type="range" id="dpi-slider" min="0" max="100" value="50" oninput="updateDPI(this.value)" class="w-full">
-                </div>
-
-                <div class="space-y-6">
-                    
-                    <div class="module-box border-l-4 border-neon-secondary">
-                        <h4 class="text-lg font-bold text-neon-secondary mb-3">DIAGNÓSTICO EM TEMPO REAL</h4>
-                        <p class="text-xl font-medium text-gray-100 mb-2">STATUS CONEXÃO</p>
-                        <div class="flex items-center justify-between">
-                            <svg class="w-1/3 h-12" viewBox="0 0 100 50" preserveAspectRatio="none" style="filter: drop-shadow(0 0 5px rgba(0, 234, 255, 0.5));">
-                                <polyline id="ping-graph" fill="none" stroke="var(--neon-secondary)" stroke-width="2" points="0,40 10,25 20,35 30,15 40,30 50,20 60,35 70,10 80,30 90,20 100,40"/>
-                            </svg>
-                            <p class="ping-display"><span id="ping-counter">15</span><span class="text-xl ml-1">MS</span></p>
-                        </div>
-                    </div>
-                    
-                    <div class="module-box border-l-4 border-neon-primary">
-                        <h4 class="text-lg font-bold text-neon-primary mb-3">DETECÇÃO DE ERROS (V.O.L.S)</h4>
-                        <div id="vols-status" class="text-sm stable-status-text min-h-[5rem] text-gray-300 font-mono">
-                            VARREDURA COMPLETA. 0 ERROS ENCUDANDO. 
-                            <br><span class="status-secure">SYSTEM STATUS: SECURE.</span>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-            
-            <div class="text-center my-10">
-                <button onclick="activateModsAndLaunch()" class="activate-button uppercase">
-                    ATIVAR MODS E INICIAR JOGO
-                </button>
-            </div>
-            
-            <div class="key-info-footer">
-                <span id="key-display-text" class="key-text">KEY: [AUTENTICANDO...]</span>
-                <button onclick="displayCurrentKey()" class="copy-key-icon">
-                    <span id="copy-text-footer">VER EXPIRAÇÃO</span>
-                </button>
-            </div>
-            
-        </div>
     </div>
 
     <script>
         
-        // =========================================================
-        // DEFINIÇÕES DE SEGURANÇA E ADMIN
-        // =========================================================
-        const KEY_STORAGE_ID = 'validAccessKey'; 
-        const STATE_STORAGE_ID = 'ffAssistantAppState'; 
-        const ADMIN_MASTER_KEY = 'ADM-123456-BOSS'; // <-- CHAVE MESTRA!
-        // =========================================================
+        const KEY_STORAGE_ID = 'validAccessKey'; // ID usado no localStorage para salvar a chave
 
         const loginScreen = document.getElementById('login-screen');
         const mainPanel = document.getElementById('main-hud-panel');
         const loginErrorMsg = document.getElementById('login-error-message');
         const loginButtonText = document.getElementById('login-text');
         const keyInput = document.getElementById('key-input');
-        const slider = document.getElementById('dpi-slider');
-        const valueDisplay = document.getElementById('dpi-value');
+        const slider = document.getElementById('aim-precision-slider');
+        const valueDisplay = document.getElementById('aim-precision-value');
         
         let appState = {
             Optimization: false, AimGuide: false, Precision: false, AimPrecisionPercentage: 50,
         };
 
-        // --- FUNÇÕES DE GERAÇÃO E VALIDAÇÃO DE KEY COM EXPIRAÇÃO ---
+        // --- FUNÇÕES DE GERAÇÃO E VALIDAÇÃO DE KEY ---
 
+        /** Gera um número aleatório de 6 dígitos. */
         function generateRandomSixDigits() {
             return Math.floor(100000 + Math.random() * 900000).toString();
         }
 
-        function generateNewAccessKey(durationDays = 7) { 
+        /** Gera uma chave de acesso válida no formato 6-6-6 e armazena. */
+        function generateNewAccessKey() {
             const part1 = generateRandomSixDigits();
             const part2 = generateRandomSixDigits();
             const part3 = generateRandomSixDigits();
-            const newKeyString = `${part1}-${part2}-${part3}`;
+            const newKey = `${part1}-${part2}-${part3}`;
             
-            const expiryDate = new Date();
-            expiryDate.setDate(expiryDate.getDate() + durationDays);
-            
-            const keyData = {
-                key: newKeyString,
-                expiry: expiryDate.getTime(),
-                durationDays: durationDays
-            };
-            
-            localStorage.setItem(KEY_STORAGE_ID, JSON.stringify(keyData)); 
-            return newKeyString;
+            localStorage.setItem(KEY_STORAGE_ID, newKey); 
+            return newKey;
         }
         
+        /** Verifica se a chave de acesso segue o padrão 6-6-6 numérico. */
         function isKeyFormatValid(key) {
             const keyRegex = /^(\d{6})-(\d{6})-(\d{6})$/;
             return keyRegex.test(key);
         }
         
+        /** Lógica principal de Login. */
         async function handleLogin(event) {
             event.preventDefault(); 
             
-            const enteredKey = keyInput.value.trim().toUpperCase();
+            const enteredKey = keyInput.value.trim();
 
             loginErrorMsg.textContent = '';
             loginButtonText.textContent = 'AUTENTICANDO...';
@@ -561,316 +402,287 @@
 
             await new Promise(resolve => setTimeout(resolve, 1500));
             
-            if (enteredKey === ADMIN_MASTER_KEY) {
+            const storedKey = localStorage.getItem(KEY_STORAGE_ID);
+            
+            if (enteredKey === storedKey && isKeyFormatValid(enteredKey)) {
+                // SUCESSO
+                loginScreen.style.display = 'none';
+                mainPanel.style.display = 'block';
+                document.getElementById('main-body').classList.remove('login-screen-container');
+                
+            } else if (!isKeyFormatValid(enteredKey)) {
+                // FALHA - FORMATO
+                loginErrorMsg.textContent = 'ERRO [COD 401]: O formato da chave está incorreto. Use XXXXXX-YYYYYY-ZZZZZZ.';
+                loginButtonText.textContent = 'CONECTAR AO SISTEMA';
+                loginButtonText.parentElement.disabled = false;
                 keyInput.value = '';
-                showAdminPanel();
-                return;
-            }
-
-            const storedKeyJSON = localStorage.getItem(KEY_STORAGE_ID);
-            let keyMatches = false;
-            let isExpired = true;
-
-            if (storedKeyJSON) {
-                try {
-                    const storedKeyData = JSON.parse(storedKeyJSON);
-                    
-                    if (enteredKey === storedKeyData.key) {
-                        keyMatches = true;
-                        if (Date.now() < storedKeyData.expiry) {
-                            isExpired = false;
-                        }
-                    }
-                } catch (e) {
-                    localStorage.removeItem(KEY_STORAGE_ID);
-                }
-            }
-            
-            // Lógica Central: Se a chave digitada for a MESTRE (para o cliente), armazena ela e loga.
-            // Nota: No nosso sistema front-end, a "chave mestra" para o cliente é a última chave gerada pelo Admin.
-            // Para simular a entrega de uma nova key, trataremos qualquer key 6-6-6 como "nova" se não houver uma válida.
-            if (!keyMatches && isKeyFormatValid(enteredKey)) {
-                 // Assumindo que o Admin entregou essa chave, a armazenamos localmente.
-                 generateNewAccessKey(7); // default 7 dias, mas idealmente teria uma duração vinculada.
-                 const keyData = JSON.parse(localStorage.getItem(KEY_STORAGE_ID));
-                 keyData.key = enteredKey;
-                 // Definir uma expiração padrão para a nova chave (ex: 7 dias a partir de agora)
-                 const newExpiryDate = new Date();
-                 newExpiryDate.setDate(newExpiryDate.getDate() + 7);
-                 keyData.expiry = newExpiryDate.getTime();
-                 keyData.durationDays = 7; 
-                 localStorage.setItem(KEY_STORAGE_ID, JSON.stringify(keyData));
-                 
-                 completeLogin();
-                 return;
-            }
-
-            if (keyMatches && !isExpired) {
-                completeLogin();
-                return;
-            }
-
-            if (keyMatches && isExpired) {
-                loginErrorMsg.textContent = 'ERRO [COD 408]: Sua Key EXPIROU. Solicite uma nova chave.';
-                localStorage.removeItem(KEY_STORAGE_ID); 
+                
             } else {
-                loginErrorMsg.textContent = 'ERRO [COD 403]: Chave inválida, expirada ou não reconhecida. Tente novamente.';
+                 // FALHA - CHAVE ERRADA/EXPIRADA
+                loginErrorMsg.textContent = 'ERRO [COD 403]: Chave inválida. Gere uma nova Key válida ou tente novamente.';
+                loginButtonText.textContent = 'CONECTAR AO SISTEMA';
+                loginButtonText.parentElement.disabled = false;
+                keyInput.value = '';
             }
-
-            loginButtonText.textContent = 'CONECTAR AO SISTEMA';
-            loginButtonText.parentElement.disabled = false;
-            keyInput.value = '';
         }
 
-        function completeLogin() {
-            loginScreen.style.display = 'none';
-            mainPanel.style.display = 'flex';
-            document.getElementById('main-body').classList.remove('login-screen-container');
-            
-            loadAppState(); 
-            initializeApp();
-            updateKeyInfoInFooter(); // Atualiza o rodapé com a Key
-        }
-
+        /** Copia a chave do modal para a área de transferência. */
         function copyKeyToClipboard() {
             const keyElement = document.getElementById('current-valid-key');
             const key = keyElement.textContent;
             const copyBtn = document.getElementById('copy-text');
 
-            if (key && key !== 'CHAVE NÃO ENCONTRADA') {
+            if (key) {
+                // Usa a API de Clipboard moderna
                 navigator.clipboard.writeText(key).then(() => {
                     copyBtn.textContent = '✅ COPIADO!';
-                    setTimeout(() => { copyBtn.textContent = '📋 COPIAR'; }, 2000);
+                    setTimeout(() => {
+                        copyBtn.textContent = '📋 COPIAR';
+                    }, 2000);
                 }).catch(err => {
-                    alert("Erro ao copiar.");
+                    // Fallback para navegadores mais antigos (menos comum)
+                    console.error('Falha ao copiar:', err);
+                    alert("Erro ao copiar. Tente selecionar a chave manualmente.");
                 });
             }
         }
         
-        function updateKeyInfoInFooter() {
-            const storedKeyJSON = localStorage.getItem(KEY_STORAGE_ID);
-            const keyFooter = document.getElementById('key-display-text');
-            const keyData = storedKeyJSON ? JSON.parse(storedKeyJSON) : null;
-
-            if (keyData && keyData.key) {
-                const expiryDate = new Date(keyData.expiry);
-                const formattedDate = expiryDate.toLocaleDateString('pt-BR');
-                
-                keyFooter.innerHTML = `KEY: ${keyData.key} (EXP: <span class="text-neon-primary">${formattedDate}</span>)`;
-            } else {
-                keyFooter.textContent = 'KEY: [N/A] (FAÇA LOGIN)';
-            }
-        }
-
+        /** Exibe um modal (popup) com a chave atualmente salva. */
         function displayCurrentKey() {
-            const storedKeyJSON = localStorage.getItem(KEY_STORAGE_ID);
+            const currentKey = localStorage.getItem(KEY_STORAGE_ID);
             const keyDisplayElement = document.getElementById('current-valid-key');
-            const keyModalInfo = document.getElementById('key-modal-info');
             
-            if (storedKeyJSON) {
-                try {
-                    const keyData = JSON.parse(storedKeyJSON);
-                    const expiryDate = new Date(keyData.expiry);
-                    keyDisplayElement.textContent = keyData.key;
-                    
-                    const formattedDate = expiryDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                    
-                    if (Date.now() >= keyData.expiry) {
-                         keyModalInfo.innerHTML = `STATUS: <span class="text-red-500 font-bold">EXPIRADA!</span>`;
-                    } else {
-                         keyModalInfo.innerHTML = `DURAÇÃO: ${keyData.durationDays} dias | Válida até: <span class="text-neon-secondary font-bold">${formattedDate}</span>`;
-                    }
-                } catch (e) {
-                     keyDisplayElement.textContent = 'Erro ao processar Key.';
-                     keyModalInfo.textContent = '';
-                }
+            if (currentKey) {
+                keyDisplayElement.textContent = currentKey;
             } else {
-                keyDisplayElement.textContent = 'CHAVE NÃO ENCONTRADA';
-                keyModalInfo.innerHTML = '<span class="text-red-500 font-bold">Status: Não logado.</span>';
+                keyDisplayElement.textContent = 'Nenhuma chave válida encontrada. Gere uma nova Key.';
             }
             document.getElementById('key-modal').classList.remove('hidden');
         }
         
-        // --- FUNÇÕES DE ADMIN ---
-        function showAdminPanel() {
-            loginScreen.style.display = 'none'; 
-            mainPanel.style.display = 'none';   
-            document.getElementById('admin-modal').classList.remove('hidden'); 
-            document.getElementById('admin-message').textContent = '';
-        }
-        
-        function handleAdminLogout() {
-            document.getElementById('admin-modal').classList.add('hidden'); 
-            document.getElementById('login-screen').style.display = 'flex';
-        }
-
-        function adminGenerateNewKey() {
-            const select = document.getElementById('key-duration-select');
-            const durationDays = parseInt(select.value);
+        /** Gera e exibe a nova chave de acesso. */
+        function generateAndDisplayNewKey() {
+            const newKey = generateNewAccessKey();
+            keyInput.value = newKey; // Preenche o campo de input
             
-            const newKey = generateNewAccessKey(durationDays); 
+            document.getElementById('current-valid-key').textContent = newKey;
+            document.getElementById('key-modal').classList.remove('hidden');
             
-            const adminMsg = document.getElementById('admin-message');
-            adminMsg.textContent = `✅ NOVA KEY GERADA: ${newKey} (Duração: ${durationDays} dias). COPIADA!`;
-            adminMsg.style.color = '#00eaff'; 
-            adminMsg.style.textShadow = '0 0 5px rgba(0, 234, 255, 0.8)';
-            
-            navigator.clipboard.writeText(newKey);
-        }
-        // --- FIM FUNÇÕES DE ADMIN ---
-
-        // --- FUNÇÕES DE PERSISTÊNCIA E SIMULAÇÃO ---
-
-        function saveAppState() {
-            appState.AimPrecisionPercentage = parseInt(document.getElementById('dpi-slider').value);
-            try {
-                localStorage.setItem(STATE_STORAGE_ID, JSON.stringify(appState));
-            } catch (e) { console.error("Erro ao salvar estado", e); }
+            loginErrorMsg.textContent = 'Nova Key gerada e salva no seu navegador. Use-a para fazer o Login.';
         }
 
-        function loadAppState() {
-            try {
-                const storedState = localStorage.getItem(STATE_STORAGE_ID);
-                if (storedState) {
-                    const loadedState = JSON.parse(storedState);
-                    appState = { ...appState, ...loadedState };
-
-                    const slider = document.getElementById('dpi-slider');
-                    if (slider) {
-                        slider.value = appState.AimPrecisionPercentage || 50;
-                        updateDPI(slider.value, true); 
-                    }
-                    
-                    ['Optimization', 'AimGuide', 'Precision'].forEach(feature => {
-                        const inputId = `toggle-${feature.toLowerCase()}-input`;
-                        const inputElement = document.getElementById(inputId);
-                        
-                        if (inputElement) {
-                            const shouldBeActive = appState[feature];
-                            if (inputElement.checked !== shouldBeActive) {
-                                inputElement.checked = shouldBeActive;
-                                toggleFeature(feature, true);
-                            }
-                        }
-                    });
-                }
-            } catch (e) { console.error("Erro ao carregar estado", e); }
-        }
-
-        function updateDPI(value, isLoad = false) {
-            appState.AimPrecisionPercentage = parseInt(value);
-            valueDisplay.textContent = `${appState.AimPrecisionPercentage}%`;
-            
-            const percentage = value + '%';
-            slider.style.background = `linear-gradient(to right, var(--neon-secondary) ${percentage}, var(--bg-inactive) ${percentage})`;
-
-            if (!isLoad) { saveAppState(); }
-        }
-
-        function toggleFeature(feature, isLoad = false) {
-            const inputId = `toggle-${feature.toLowerCase()}-input`;
-            const inputElement = document.getElementById(inputId);
-            const toggleId = `toggle-${feature.toLowerCase()}`;
-            const toggleElement = document.getElementById(toggleId);
-            
-            const willBeActive = inputElement.checked; 
-            appState[feature] = willBeActive;
-
-            if (!isLoad) { saveAppState(); }
-
-            if (toggleElement) {
-                toggleElement.classList.toggle('active', willBeActive);
-            }
-            
-            // Simulação de Status V.O.L.S
-            const statusElement = document.getElementById('vols-status');
-            const activeCount = Object.values(appState).filter(val => val === true).length;
-            
-            if (activeCount > 0) {
-                statusElement.innerHTML = `MODOS ATIVOS: ${activeCount}. DIAGNÓSTICO EM CURSO. 
-                <br><span class="text-yellow-400">STATUS: CUIDADO AO INICIAR.</span>`;
-            } else {
-                statusElement.innerHTML = `VARREDURA COMPLETA. 0 ERROS ENCUDANDO. 
-                <br><span class="status-secure">SYSTEM STATUS: SECURE.</span>`;
-            }
-        }
-        
-        let pingInterval;
-
-        function startPingSim() {
-            const pingCounter = document.getElementById('ping-counter');
-            const pingGraph = document.getElementById('ping-graph');
-            let history = Array(11).fill(40); // 11 pontos, valor inicial 40 (para 50 de altura)
-
-            clearInterval(pingInterval);
-
-            pingInterval = setInterval(() => {
-                const currentPing = Math.floor(Math.random() * (40 - 10) + 10);
-                pingCounter.textContent = currentPing;
-                
-                // Atualiza o histórico (normaliza o ping para a altura do gráfico 0-50)
-                // 10ms -> 45 (topo), 40ms -> 5 (base)
-                const normalizedHeight = 50 - ((currentPing - 10) / 30) * 40; 
-                
-                history.shift();
-                history.push(normalizedHeight);
-                
-                const points = history.map((h, i) => `${i * 10},${h}`).join(' ');
-                pingGraph.setAttribute('points', points);
-
-            }, 800);
-        }
-
-        function activateModsAndLaunch() {
-            // Lógica de ativação e lançamento
-            const activeCount = Object.values(appState).filter(val => val === true).length;
-            if (activeCount > 0) {
-                alert(`ATIVANDO: ${activeCount} MODS. INICIANDO FREE FIRE OTIMIZADO...`);
-            } else {
-                alert("Nenhuma função ativada. Iniciando Free Fire normalmente...");
-            }
-            
-            // Simula o lançamento do aplicativo (Deep Link)
-            const deepLinkUri = "garenafreefire://";
-            window.location.href = deepLinkUri;
-        }
-
-
-        function initializeApp() {
-            if (slider && valueDisplay) { updateDPI(appState.AimPrecisionPercentage, true); }
-            startPingSim(); // Inicia o simulador de ping no fundo
-        }
-
-        // Chama a função de verificação de login ao carregar
-        document.addEventListener('DOMContentLoaded', checkLoginStatus);
-        
-        // Função para checar o login (mantida da v3.0)
+        /** Lógica de Inicialização: Garante que uma chave exista e prepara a tela. */
         function checkLoginStatus() {
-            const storedKeyJSON = localStorage.getItem(KEY_STORAGE_ID);
+            let currentKey = localStorage.getItem(KEY_STORAGE_ID);
             
-            if (storedKeyJSON) {
-                try {
-                    const storedKeyData = JSON.parse(storedKeyJSON);
-                    
-                    if (Date.now() < storedKeyData.expiry) {
-                        completeLogin(); // Loga automaticamente
-                        return;
-                    } else {
-                        localStorage.removeItem(KEY_STORAGE_ID); // Expira
-                    }
-                } catch (e) {
-                    localStorage.removeItem(KEY_STORAGE_ID);
-                }
+            if (!currentKey || !isKeyFormatValid(currentKey)) {
+                currentKey = generateNewAccessKey();
             }
             
+            keyInput.placeholder = currentKey; 
             keyInput.value = ''; 
+
             loginScreen.style.display = 'flex';
             mainPanel.style.display = 'none';
             document.getElementById('main-body').classList.add('login-screen-container');
 
-            loadAppState(); 
             initializeApp();
         }
+
+        // --- FUNÇÕES DE SIMULAÇÃO DO PAINEL (MANTIDAS) ---
+
+        function updateStatusText(element, text) { element.textContent = text; }
+        function clearStatusText(element) { element.textContent = ''; }
+        function restartAnimation(element) { element.classList.remove('section-enter-animation'); void element.offsetWidth; element.classList.add('section-enter-animation'); }
+
+        function openFreeFireApp() {
+            const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isAndroid = /Android/.test(navigator.userAgent);
+            const deepLinkUri = "garenafreefire://";
+            const fallbackUrlAndroid = "https://play.google.com/store/apps/details?id=com.dts.freefireth";
+            const fallbackUrliOS = "https://apps.apple.com/app/free-fire-battlegrounds/id1300146617";
+            
+            window.location.href = deepLinkUri;
+            setTimeout(() => {
+                if (isiOS) { window.location.href = fallbackUrliOS; } 
+                else if (isAndroid) { window.location.href = fallbackUrlAndroid; } 
+                else { window.location.href = fallbackUrlAndroid; }
+            }, 500);
+        }
+
+        async function startOptimizationSim() {
+            const statusTextElement = document.getElementById('opt-status-text');
+            const progressBar = document.getElementById('opt-progress-fill');
+            const fpsCounter = document.getElementById('fps-counter'); 
+            
+            clearStatusText(statusTextElement); progressBar.style.width = '0%'; progressBar.classList.add('active'); fpsCounter.textContent = '30'; 
+            
+            const steps = [
+                { delay: 0, progress: 0, text: 'PROCESSANDO | Iniciando varredura de núcleo...', fps: 30 },
+                { delay: 1000, progress: 30, text: 'EXECUTANDO | Limpando cache de fundo de RAM... [OK]', fps: 45 },
+                { delay: 2000, progress: 65, text: 'EXECUTANDO | Ajustando prioridade de núcleo da CPU...', fps: 55 },
+                { delay: 3500, progress: 95, text: 'EXECUTANDO | Alocando banda de rede para Free Fire...', fps: 58 },
+                { delay: 4000, progress: 100, text: 'CONCLUÍDO | Otimização de sistema finalizada. Desempenho máximo ATIVO.', fps: 60 },
+            ];
+            
+            let accumulatedDelay = 0;
+            for (const step of steps) {
+                if (!appState.Optimization) return; 
+                await new Promise(resolve => setTimeout(resolve, step.delay - accumulatedDelay));
+                accumulatedDelay = step.delay;
+                updateStatusText(statusTextElement, step.text);
+                progressBar.style.width = step.progress + '%';
+                fpsCounter.style.transition = 'text-shadow 0.3s, color 0.3s';
+                fpsCounter.textContent = step.fps; 
+                fpsCounter.classList.add('neon-glow');
+                setTimeout(() => fpsCounter.classList.remove('neon-glow'), 150);
+            }
+            progressBar.classList.remove('active');
+        }
+        
+        async function startAimGuideSim() {
+            const statusTextElement = document.getElementById('aim-status-text');
+            const reticleElement = document.getElementById('aim-reticle');
+            
+            clearStatusText(statusTextElement);
+            
+            const spinGroup = reticleElement.querySelector('.reticle-spin');
+            const pulseGroup = reticleElement.querySelector('.reticle-base');
+            const textElement = reticleElement.querySelector('text');
+
+            spinGroup.style.animation = 'reticle-spin 0.5s linear infinite';
+            pulseGroup.style.animation = 'reticle-pulse 0.5s ease-in-out infinite';
+            textElement.textContent = 'BUSCA...';
+            textElement.setAttribute('fill', 'var(--neon-secondary)');
+            
+            updateStatusText(statusTextElement, 'PROCESSANDO | Iniciando varredura de sensibilidade...');
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            if (!appState.AimGuide) return;
+            updateStatusText(statusTextElement, 'EXECUTANDO | Ajustando parâmetros de DPI e Sensibilidade (360°)...');
+            spinGroup.style.animation = 'reticle-spin 1.5s linear infinite';
+            pulseGroup.style.animation = 'reticle-pulse 1.2s ease-in-out infinite';
+            textElement.textContent = 'CALIBRANDO';
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            if (!appState.AimGuide) return;
+            updateStatusText(statusTextElement, 'CONCLUÍDO | MIRA ASSISTIDA ATIVA! Sistema pronto para o jogo.');
+            spinGroup.style.animation = 'none';
+            pulseGroup.style.animation = 'none';
+            textElement.textContent = 'LOCK';
+            textElement.setAttribute('fill', 'var(--neon-primary)');
+        }
+
+        async function startPrecisionSim() {
+            const statusTextElement = document.getElementById('prec-status-text');
+            const progressBar = document.getElementById('prec-progress-fill');
+            const stabilizer = document.getElementById('recoil-stabilizer'); 
+            const precValueDisplay = document.getElementById('prec-value');
+            const currentPrecision = document.getElementById('aim-precision-value').textContent; 
+            
+            clearStatusText(statusTextElement); progressBar.style.width = '0%'; progressBar.classList.add('active'); 
+            stabilizer.classList.add('animate-pulse'); stabilizer.classList.remove('neon-glow'); stabilizer.textContent = '[ | | ]'; 
+            precValueDisplay.textContent = currentPrecision; 
+            
+            const simulationSteps = [
+                { text: `PROCESSANDO | Analisando o controle de Recoil para: ${currentPrecision}`, progress: 0, stabilizer: '[ | | ]', wait: 500 },
+                { text: 'EXECUTANDO | Inicializando algoritmo Anti-Recoil (Fase 1/3)...', progress: 30, stabilizer: '[ > < ]', wait: 1500 },
+                { text: 'EXECUTANDO | Análise de Dispersão de Projéteis em tempo real...', progress: 60, stabilizer: '[ > | < ]', wait: 1500 },
+                { text: 'EXECUTANDO | Configurando estabilidade do giroscópio (Anti-Vibração)...', progress: 90, stabilizer: '[ | | ]', wait: 1000 },
+                { text: `CONCLUÍDO | Ajustes Finais executados. Recoil otimizado em ${currentPrecision}.`, progress: 100, stabilizer: '[ LOCK ]', wait: 0 },
+            ];
+            
+            for (const step of simulationSteps) {
+                if (!appState.Precision) return; 
+                await new Promise(resolve => setTimeout(resolve, step.wait));
+                updateStatusText(statusTextElement, step.text);
+                progressBar.style.width = step.progress + '%';
+                stabilizer.textContent = step.stabilizer;
+            }
+            
+            progressBar.classList.remove('active');
+            stabilizer.classList.add('neon-glow');
+            stabilizer.classList.remove('animate-pulse');
+        }
+
+        function updateSliderVisual(value) {
+            const percentage = value + '%';
+            slider.style.background = `linear-gradient(to right, var(--neon-secondary) ${percentage}, var(--bg-inactive) ${percentage})`;
+        }
+
+        function updateAimPrecision(value) {
+            appState.AimPrecisionPercentage = parseInt(value);
+            valueDisplay.textContent = `${appState.AimPrecisionPercentage}%`;
+            
+            const precValueDisplay = document.getElementById('prec-value');
+            if(precValueDisplay) { precValueDisplay.textContent = `${appState.AimPrecisionPercentage}%`; }
+            
+            updateSliderVisual(appState.AimPrecisionPercentage);
+        }
+
+        function toggleFeature(feature) {
+            const inputId = `toggle-${feature.toLowerCase()}-input`;
+            const inputElement = document.getElementById(inputId);
+            
+            const willBeActive = inputElement.checked; 
+            appState[feature] = willBeActive;
+
+            const toggleId = `toggle-${feature.toLowerCase()}`;
+            const toggleElement = document.getElementById(toggleId);
+
+            if (toggleElement) {
+                toggleElement.classList.toggle('active', willBeActive);
+                toggleElement.setAttribute('aria-checked', willBeActive);
+            }
+
+            const sectionId = `section-${feature.toLowerCase()}`;
+            const sectionElement = document.getElementById(sectionId);
+
+            if (sectionElement) {
+                const statusTextId = `${feature.toLowerCase().slice(0, 4)}-status-text`;
+                const statusTextElement = document.getElementById(statusTextId);
+
+                if (willBeActive) {
+                    sectionElement.style.display = 'block';
+                    restartAnimation(sectionElement);
+                    
+                    switch (feature) {
+                        case 'Optimization': startOptimizationSim(); break;
+                        case 'AimGuide': startAimGuideSim(); break;
+                        case 'Precision': startPrecisionSim(); break;
+                    }
+                } else {
+                    sectionElement.style.display = 'none'; 
+                    clearStatusText(statusTextElement);
+                    
+                    if (feature === 'Optimization' && document.getElementById('opt-progress-fill')) {
+                         document.getElementById('opt-progress-fill').classList.remove('active');
+                         document.getElementById('fps-counter').textContent = '30';
+                    }
+                    if (feature === 'Precision' && document.getElementById('prec-progress-fill')) {
+                         document.getElementById('prec-progress-fill').classList.remove('active');
+                         const stabilizer = document.getElementById('recoil-stabilizer');
+                         stabilizer.textContent = '[ | | ]';
+                         stabilizer.classList.remove('neon-glow');
+                         stabilizer.classList.add('animate-pulse');
+                    }
+                    if (feature === 'AimGuide' && document.getElementById('aim-reticle')) {
+                        const reticleElement = document.getElementById('aim-reticle');
+                        reticleElement.querySelector('.reticle-spin').style.animation = 'none';
+                        reticleElement.querySelector('.reticle-base').style.animation = 'none';
+                        reticleElement.querySelector('text').textContent = 'BUSCA...'; 
+                        reticleElement.querySelector('text').setAttribute('fill', 'var(--neon-secondary)');
+                    }
+                }
+            }
+        }
+
+        function initializeApp() {
+            if (slider && valueDisplay) { updateAimPrecision(appState.AimPrecisionPercentage); }
+        }
+
+        // Chama a função de verificação de login ao carregar
+        document.addEventListener('DOMContentLoaded', checkLoginStatus);
 
     </script>
 </body>
